@@ -46,8 +46,8 @@ where
         let (mut i, mut j) = (low, mid);
         let mut vec = Vec::new();
         // vec.resize(high-low+1,Default::default());
-        ////? Optimization: how to create a vector<T> and size is len
-        ////? so we no longer to create tempory vectors.
+        ////? Optimization: how to create a vector<T> and size is len in rust
+        ////? so we no longer to create many tempory vectors.
         for _ in low..high + 1 {
             if i >= mid {
                 vec.push(ar[j].clone());
@@ -105,19 +105,26 @@ impl<T: PartialOrd + Clone> Sorter<T> for InsertionSorter {
         *mid = high;
     }
     fn join(&self, ar: &mut Vec<T>, _low: usize, mid: usize, _high: usize) {
-        //precondition mid = high && ar[low..high] is sorted
+        //precondition low < mid = high && ar[low..high] is sorted
         let key = ar[mid].clone();
         let mut j = mid - 1;
-        while key < ar[j] {
+        while key < ar[j] && j > 0{
             ar[j+1] = ar[j].clone();
-            if j == 0 { /* On a case where key is unique minimum*/
-                ar[j] = key;
-                return;
-            }
-            j -= 1;
-            // j = j.wrapping_sub(1);
+            j -= 1;            
         }
-        ar[j+1] = key;
+        // Version 2
+        if j == 0 {
+            ar[j+1] = ar[j].clone();
+            j = j.wrapping_sub(1);
+        } 
+        ar[j.wrapping_add(1)] = key;
+        // // Version 1
+        // if j == 0 {
+        //     ar[j+1] = ar[j].clone();
+        //     ar[j] = key;
+        // } else {
+        //     ar[j+1] = key;
+        // }
     }
 }
 
