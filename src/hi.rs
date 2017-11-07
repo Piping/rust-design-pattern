@@ -14,13 +14,61 @@ impl<T: PartialOrd + Clone + Default> MergeSorter<T>
     }
 }
 struct QuickSorter;
-// impl<T: PartialOrd + Clone> QuickSorter<T>{
-//     pub fn sort(&self, ar: &mut Vec<T>, low: usize, high: usize) {
-//         Sorter::sort(self,ar,low,high);
-//     }    
-// }
 struct SelectionSorter;
 struct InsertionSorter;
+struct HeapSorter<T> {
+    phantom: std::marker::PhantomData<T>,
+}
+
+impl<T: PartialOrd + Clone > HeapSorter<T> {
+    pub fn new()-> Self{
+        HeapSorter{ phantom:std::marker::PhantomData,}
+    }
+    pub fn sort(&self, ar: &mut Vec<T>, low: usize, high: usize) {
+        self.heapfy(ar,low,high);
+        Sorter::sort(self,ar,low,high);
+    }
+    fn heapfy(&self, ar: &mut Vec<T>, low: usize, high: usize){
+        // largest index of a node with at least one child
+        let mut idx = (high-1-low)/2 + low;
+        while idx >= low && idx > 0{
+            self.shift_down(ar,low,idx,high);
+            idx -= 1;
+        }
+        if idx == 0 {
+            self.shift_down(ar,low,idx,high);
+        }
+    }
+    fn shift_down(&self, ar: &mut Vec<T>, low: usize, i: usize, high: usize){
+        let mut child = i - low + i +1; // index of left child
+        if child <= high {
+            if child < high && ar[child] < ar[child+1] {
+                child += 1;
+            }
+            if ar[i] < ar[child] {
+                ar.swap(i,child);
+                self.shift_down(ar,low,child,high);
+            }
+        }
+    }
+}
+
+impl<T> Sorter<T> for HeapSorter<T>
+where
+    T: PartialOrd + Clone,
+{
+    fn split(&self, ar: &mut Vec<T>, low: usize, mid: &mut usize, high: usize){
+        //pre-condition: maxheap(a[lo..hi])
+        //post-condition: maxheap(a[lo..hi-1])
+        //post-condition: a[hi] == old a[low], max && mid == hi
+        ar.swap(low,high);
+        self.shift_down(ar,low,low,high-1);
+        *mid = high;
+    }
+    fn join(&self, _ar: &mut Vec<T>, _low: usize, _mid: usize, _high: usize){}
+}
+
+
 trait Sorter<T: PartialOrd + Clone> {
     fn sort(&self, ar: &mut Vec<T>, low: usize, high: usize) {
         if high >= ar.len() {
@@ -140,16 +188,19 @@ fn main() {
     let mut b = a.clone();
     let mut c = a.clone();
     let mut d = a.clone();
+    let mut e = a.clone();
     let len  = a.len(); // optimize merge sort with size len vector
     let high = a.len() - 1;
     MergeSorter::new(len).sort(&mut a, 0, high);
     QuickSorter.sort(&mut b, 0, high);
     SelectionSorter.sort(&mut c, 0, high);
     InsertionSorter.sort(&mut d, 0, high);
+    HeapSorter::new().sort(&mut e, 0, high);
     println!("MergeSorter:     {:?}", a);
     println!("QuickSorter:     {:?}", b);
     println!("SelectionSorter: {:?}", c);
     println!("InsertionSorter: {:?}", d);
+    println!("HeapSorter:      {:?}", e);
     println!("{:05b}", 1.clone());
     for i in (1..10+1).rev(){
         println!("{:?}", i);
