@@ -1,18 +1,24 @@
-/** 
- * visibility control
-   mod my_module {
-      pub struct MergeSorter;
-      struct MergeSort;
-      impl Trait for MergeSort { ... }
-      impl MergeSorter { 
-         pub fn sort(&self){
-            MergeSort.sort()
-         }
-      }
-   } 
-*/
-struct MergeSorter;
+struct MergeSorter<T>{
+    vec: std::cell::RefCell<Vec<T>>,
+}
+impl<T: PartialOrd + Clone + Default> MergeSorter<T> 
+{
+    pub fn new(len:usize) -> Self {
+        let mut temp: Vec<T> = Vec::new();
+        temp.resize(len,Default::default());
+        MergeSorter{ vec: std::cell::RefCell::new(temp) }
+    }
+    /**  visibility control */
+    pub fn sort(&self, ar: &mut Vec<T>, low: usize, high: usize) {
+        Sorter::sort(self,ar,low,high);
+    }
+}
 struct QuickSorter;
+// impl<T: PartialOrd + Clone> QuickSorter<T>{
+//     pub fn sort(&self, ar: &mut Vec<T>, low: usize, high: usize) {
+//         Sorter::sort(self,ar,low,high);
+//     }    
+// }
 struct SelectionSorter;
 struct InsertionSorter;
 trait Sorter<T: PartialOrd + Clone> {
@@ -33,10 +39,9 @@ trait Sorter<T: PartialOrd + Clone> {
     fn split(&self, ar: &mut Vec<T>, low: usize, mid: &mut usize, high: usize);
     fn join(&self, ar: &mut Vec<T>, low: usize, mid: usize, high: usize);
 }
-
-impl<T> Sorter<T> for MergeSorter
+impl<T> Sorter<T> for MergeSorter<T>
 where
-    T: PartialOrd + Clone,
+    T: PartialOrd + Clone + Default,
 {
     fn split(&self, ar: &mut Vec<T>, low: usize, mid: &mut usize, high: usize) {
         let _ = ar;
@@ -44,29 +49,26 @@ where
     }
     fn join(&self, ar: &mut Vec<T>, low: usize, mid: usize, high: usize) {
         let (mut i, mut j) = (low, mid);
-        let mut vec = Vec::new();
-        // vec.resize(high-low+1,Default::default());
-        ////? Optimization: how to create a vector<T> and size is len in rust
-        ////? so we no longer to create many tempory vectors.
-        for _ in low..high + 1 {
+        let mut vec = self.vec.borrow_mut();
+        for k in low..high + 1 {
             if i >= mid {
-                vec.push(ar[j].clone());
+                vec[k] = ar[j].clone();
                 j += 1;
             } else if j > high {
-                vec.push(ar[i].clone());
+                vec[k] = ar[i].clone();
                 i += 1;
             } else {
                 if ar[i] > ar[j] {
-                    vec.push(ar[j].clone());
+                    vec[k] = ar[j].clone();
                     j += 1;
                 } else {
-                    vec.push(ar[i].clone());
+                    vec[k] = ar[i].clone();
                     i += 1;
                 }
             }
         }
         for idx in low..high + 1 {
-            ar[idx] = vec[idx - low].clone();
+            ar[idx] = vec[idx].clone();
         }
     }
 }
@@ -138,9 +140,9 @@ fn main() {
     let mut b = a.clone();
     let mut c = a.clone();
     let mut d = a.clone();
-    //let len  = a.len(); // optimize merge sort with size len vector
+    let len  = a.len(); // optimize merge sort with size len vector
     let high = a.len() - 1;
-    MergeSorter.sort(&mut a, 0, high);
+    MergeSorter::new(len).sort(&mut a, 0, high);
     QuickSorter.sort(&mut b, 0, high);
     SelectionSorter.sort(&mut c, 0, high);
     InsertionSorter.sort(&mut d, 0, high);
