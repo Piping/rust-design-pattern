@@ -26,6 +26,7 @@
      L1'      L2'
         \    /
          join
+    ```
    ```
 
 - ```python
@@ -41,6 +42,20 @@
 
    - T(n) refers to total time for a recursive function, e.g sort
    - O(n) refers to running time for a non-recursive function e.g split,join
+
+## Decorator Pattern
+
+- Decorator Design Pattern
+- Parametric Decorator Pattern
+- To Have ease of testing real performace vs theorical performance
+  - ways to not modify the original code
+  - consider the metrics, aka the standard measurement
+  - consider the number of different operation and instruction in asmbly
+  - cost for each operation may varies, idea of weighted sum
+  - timer/clock is not useful becasue of time-sharing of today's OS design
+- Assignment, Comparision, Probe(Ramdom Access Read)
+- `sorter < Counter< data_type > >`
+- ​
 
 ## Composite, State, Visitor Pattern
 

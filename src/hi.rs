@@ -1,54 +1,74 @@
-struct MergeSorter<T>{
+struct MergeSorter<T> {
     vec: std::cell::RefCell<Vec<T>>,
 }
-impl<T: PartialOrd + Clone + Default> MergeSorter<T> 
-{
-    pub fn new(len:usize) -> Self {
+impl<T: PartialOrd + Clone + Default> MergeSorter<T> {
+    pub fn new(len: usize) -> Self {
         let mut temp: Vec<T> = Vec::new();
-        temp.resize(len,Default::default());
-        MergeSorter{ vec: std::cell::RefCell::new(temp) }
+        temp.resize(len, Default::default());
+        MergeSorter {
+            vec: std::cell::RefCell::new(temp),
+        }
     }
     /**  visibility control */
     pub fn sort(&self, ar: &mut Vec<T>, low: usize, high: usize) {
-        Sorter::sort(self,ar,low,high);
+        Sorter::sort(self, ar, low, high);
     }
 }
 struct QuickSorter;
 struct SelectionSorter;
 struct InsertionSorter;
 struct HeapSorter<T> {
-    phantom: std::marker::PhantomData<T>,
+    marker: std::marker::PhantomData<T>,
 }
 
-impl<T: PartialOrd + Clone > HeapSorter<T> {
-    pub fn new()-> Self{
-        HeapSorter{ phantom:std::marker::PhantomData,}
+impl<T: PartialOrd + Clone> HeapSorter<T> {
+    pub fn new() -> Self {
+        HeapSorter {
+            marker: std::marker::PhantomData,
+        }
     }
     pub fn sort(&self, ar: &mut Vec<T>, low: usize, high: usize) {
-        self.heapfy(ar,low,high);
-        Sorter::sort(self,ar,low,high);
+        self.heapfy(ar, low, high);
+        Sorter::sort(self, ar, low, high);
     }
-    fn heapfy(&self, ar: &mut Vec<T>, low: usize, high: usize){
+    fn heapfy(&self, ar: &mut Vec<T>, low: usize, high: usize) {
         // largest index of a node with at least one child
-        let mut idx = (high-1-low)/2 + low;
-        while idx >= low && idx > 0{
-            self.shift_down(ar,low,idx,high);
+        let mut idx = (high - 1 - low) / 2 + low;
+        while idx >= low && idx > 0 {
+            self.shift_down(ar, low, idx, high);
             idx -= 1;
         }
         if idx == 0 {
-            self.shift_down(ar,low,idx,high);
+            self.shift_down(ar, low, idx, high);
         }
     }
-    fn shift_down(&self, ar: &mut Vec<T>, low: usize, i: usize, high: usize){
-        let mut child = i - low + i +1; // index of left child
+    fn _shift_down(&self, ar: &mut Vec<T>, low: usize, i: usize, high: usize) {
+        let mut child = i - low + i + 1; // index of left child
         if child <= high {
-            if child < high && ar[child] < ar[child+1] {
+            if child < high && ar[child] < ar[child + 1] {
                 child += 1;
             }
             if ar[i] < ar[child] {
-                ar.swap(i,child);
-                self.shift_down(ar,low,child,high);
+                ar.swap(i, child);
+                self._shift_down(ar, low, child, high);
             }
+        }
+    }
+    fn shift_down(&self, ar: &mut Vec<T>, low: usize, i: usize, high: usize) {
+        let mut j = i;
+        loop {
+            let mut child = j - low + j + 1; // index of left child
+            if child > high {
+                return;
+            };
+            if child < high && ar[child] < ar[child + 1] {
+                child += 1;
+            }
+            if ar[j] >= ar[child] {
+                return;
+            }
+            ar.swap(j, child);
+            j = child;
         }
     }
 }
@@ -57,15 +77,15 @@ impl<T> Sorter<T> for HeapSorter<T>
 where
     T: PartialOrd + Clone,
 {
-    fn split(&self, ar: &mut Vec<T>, low: usize, mid: &mut usize, high: usize){
+    fn split(&self, ar: &mut Vec<T>, low: usize, mid: &mut usize, high: usize) {
         //pre-condition: maxheap(a[lo..hi])
         //post-condition: maxheap(a[lo..hi-1])
         //post-condition: a[hi] == old a[low], max && mid == hi
-        ar.swap(low,high);
-        self.shift_down(ar,low,low,high-1);
+        ar.swap(low, high);
+        self.shift_down(ar, low, low, high - 1);
         *mid = high;
     }
-    fn join(&self, _ar: &mut Vec<T>, _low: usize, _mid: usize, _high: usize){}
+    fn join(&self, _ar: &mut Vec<T>, _low: usize, _mid: usize, _high: usize) {}
 }
 
 
@@ -125,7 +145,7 @@ where
     T: PartialOrd + Clone,
 {
     fn split(&self, ar: &mut Vec<T>, low: usize, mid: &mut usize, high: usize) {
-      let key = ar[high].clone();
+        let key = ar[high].clone();
         *mid = low;
         for j in low..high + 1 {
             if ar[j] <= key {
@@ -158,15 +178,15 @@ impl<T: PartialOrd + Clone> Sorter<T> for InsertionSorter {
         //precondition low < mid = high && ar[low..high] is sorted
         let key = ar[mid].clone();
         let mut j = mid - 1;
-        while key < ar[j] && j > 0{
-            ar[j+1] = ar[j].clone();
-            j -= 1;            
+        while key < ar[j] && j > 0 {
+            ar[j + 1] = ar[j].clone();
+            j -= 1;
         }
         // Version 2
         if j == 0 {
-            ar[j+1] = ar[j].clone();
+            ar[j + 1] = ar[j].clone();
             j = j.wrapping_sub(1);
-        } 
+        }
         ar[j.wrapping_add(1)] = key;
         // // Version 1
         // if j == 0 {
@@ -189,7 +209,7 @@ fn main() {
     let mut c = a.clone();
     let mut d = a.clone();
     let mut e = a.clone();
-    let len  = a.len(); // optimize merge sort with size len vector
+    let len = a.len(); // optimize merge sort with size len vector
     let high = a.len() - 1;
     MergeSorter::new(len).sort(&mut a, 0, high);
     QuickSorter.sort(&mut b, 0, high);
@@ -202,7 +222,7 @@ fn main() {
     println!("InsertionSorter: {:?}", d);
     println!("HeapSorter:      {:?}", e);
     println!("{:05b}", 1.clone());
-    for i in (1..10+1).rev(){
+    for i in (1..10 + 1).rev() {
         println!("{:?}", i);
     }
     println!("{}", 4 / 3);
